@@ -48,7 +48,7 @@ void connectAWS()
   client.onMessage(messageHandler);
 
   Serial.print("Connecting to AWS IOT as thing ");
-  Serial.print(THINGNAME);
+  Serial.println(THINGNAME);
 
   while (!client.connect(THINGNAME)) {
     Serial.print(".");
@@ -64,7 +64,10 @@ void connectAWS()
   Serial.print("Subscribing to topic ");
   Serial.println(AWS_IOT_SUBSCRIBE_TOPIC);
 
-  client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
+  bool success = client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
+
+  Serial.print("Subscription success: ");
+  Serial.println(success);
 
   Serial.println("AWS IoT Connected!");
 }
@@ -77,7 +80,11 @@ void publishMessage()
   char jsonBuffer[512];
   serializeJson(doc, jsonBuffer); // print to client
 
-  client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
+  bool success = client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
+  if(!success) {
+    Serial.print("Publish failed: ");
+    Serial.println(success);
+  }
 }
 
 void setup() {
