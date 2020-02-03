@@ -47,7 +47,8 @@ void connectAWS()
   // Create a message handler
   client.onMessage(messageHandler);
 
-  Serial.print("Connecting to AWS IOT");
+  Serial.print("Connecting to AWS IOT as thing ");
+  Serial.print(THINGNAME);
 
   while (!client.connect(THINGNAME)) {
     Serial.print(".");
@@ -60,6 +61,9 @@ void connectAWS()
   }
 
   // Subscribe to a topic
+  Serial.print("Subscribing to topic ");
+  Serial.println(AWS_IOT_SUBSCRIBE_TOPIC);
+
   client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
 
   Serial.println("AWS IoT Connected!");
