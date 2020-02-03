@@ -1,6 +1,0 @@
-/device/.pio
-/device/.vscode/.browse.c_cpp.db*
-/device/.vscode/c_cpp_properties.json
-/device/.vscode/launch.json
-/device/.vscode/ipch
-/device/include/secrets.h
