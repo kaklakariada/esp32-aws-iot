@@ -4,4 +4,5 @@ import * as cdk from '@aws-cdk/core';
 import { InfrastructureStack } from '../lib/infrastructure-stack';
 
 const app = new cdk.App();
-new InfrastructureStack(app, 'InfrastructureStack');
+const props: cdk.StackProps = { env: { region: 'eu-west-1' } };
+new InfrastructureStack(app, 'ESP32SensorStack', props);
