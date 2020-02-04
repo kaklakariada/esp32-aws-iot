@@ -3,14 +3,19 @@
 #include <MQTTClient.h>
 #include <ArduinoJson.h>
 #include "WiFi.h"
-
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
 
 // The MQTT topics that this device should publish/subscribe
 #define AWS_IOT_PUBLISH_TOPIC   "esp32/pub"
 #define AWS_IOT_SUBSCRIBE_TOPIC "esp32/sub"
+#define SEALEVELPRESSURE_HPA (1013.25)
+
 
 WiFiClientSecure net = WiFiClientSecure();
 MQTTClient client = MQTTClient(256);
+Adafruit_BME280 bme;
 
 void messageHandler(String &topic, String &payload) {
   Serial.println("incoming: " + topic + " - " + payload);
@@ -72,11 +77,24 @@ void connectAWS()
   Serial.println("AWS IoT Connected!");
 }
 
+void connectBme() {
+  bool status = bme.begin(0x76);
+  Serial.println("Connecting to BME280...");
+  if (!status) {
+    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    while (1);
+  }
+  Serial.println("Connected to BME280");
+}
+
 void publishMessage()
 {
   StaticJsonDocument<200> doc;
   doc["time"] = millis();
-  doc["sensor_a0"] = analogRead(0);
+  doc["temperature"] = bme.readTemperature();
+  doc["pressure"] = bme.readPressure() / 100.0F;
+  doc["altitude"] = bme.readAltitude(SEALEVELPRESSURE_HPA);
+  doc["humidity"] = bme.readHumidity();
   char jsonBuffer[512];
   serializeJson(doc, jsonBuffer); // print to client
 
@@ -89,6 +107,7 @@ void publishMessage()
 
 void setup() {
   Serial.begin(115200);
+  connectBme();
   connectAWS();
 }
 
