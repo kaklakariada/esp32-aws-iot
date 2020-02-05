@@ -6,15 +6,27 @@ This project uses an ESP32 to publish temperature, pressure and humidity to AWS 
 
 * ESP32 Dev kit
 * BME280 sensor
+* SDS011 sensor
 
 ### Wiring
 
-| ESP32 | BME280 |
-|-------|--------|
-| 3V3   | VCC    |
-| GND   | GND    |
-| G22   | SCL    |
-| G21   | SDA    |
+#### BME280
+
+| ESP32 pins     | BME280 pins |
+|----------------|-------------|
+| 3V3            | VCC         |
+| GND            | GND         |
+| G22 (IC2 SCL)  | SCL         |
+| G21 (IC2 SDA)  | SDA         |
+
+#### SDS011
+
+| ESP32 pins | SDS011 pins |
+|------------|-------------|
+| 5V         | 5V          |
+| GND        | GND         |
+| G16 (RX2)  | RX          |
+| G17 (TX2)  | TX          |
 
 ## Setup
 
@@ -31,3 +43,18 @@ This project uses an ESP32 to publish temperature, pressure and humidity to AWS 
    * `AWS_CERT_PRIVATE`: private key from device certificate
 1. Build and upload with PlatformIO
 1. Verify that messages are published to AWS IoT
+
+## Example message
+
+```json
+{
+  "time": 669776,
+  "temperature": 21.83,
+  "humidity": 36.62695,
+  "pressure": 997.652,
+  "altitude": 130.6805,
+  "hall": 4,
+  "sds_p10": 19.2,
+  "sds_p25": 13.8
+}
+```
