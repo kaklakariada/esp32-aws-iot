@@ -6,6 +6,7 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
+#include <SDS011.h>
 
 #define PUBLISH_MEASURMENT_TOPIC   "sensor/measurment"
 #define PUBLISH_MESSAGE_TOPIC   "sensor/message"
@@ -15,6 +16,8 @@
 WiFiClientSecure net = WiFiClientSecure();
 MQTTClient client = MQTTClient(256);
 Adafruit_BME280 bme;
+SDS011 sds;
+HardwareSerial port(2);
 
 void messageHandler(String &topic, String &payload) {
   Serial.println("incoming: " + topic + " - " + payload);
@@ -125,10 +128,24 @@ void publishMeasurment()
   StaticJsonDocument<200> doc;
   doc["time"] = millis();
   doc["temperature"] = bme.readTemperature();
+  doc["humidity"] = bme.readHumidity();
   doc["pressure"] = bme.readPressure() / 100.0F;
   doc["altitude"] = bme.readAltitude(SEALEVELPRESSURE_HPA);
-  doc["humidity"] = bme.readHumidity();
+  doc["hall"] = hallRead();
+
+  float p10, p25;
+  int err = sds.read(&p25, &p10);
+  if (!err) {
+    doc["sds_p10"] = p10;
+    doc["sds_p25"] = p25;
+  } else {
+    doc["sds_err"] = err;
+  }
   publishJson(PUBLISH_MEASURMENT_TOPIC, doc);
+}
+
+void connectSds() {
+  sds.begin(&port);
 }
 
 void setup() {
@@ -136,10 +153,11 @@ void setup() {
   connectWifi();
   connectAWS();
   connectBme();
+  connectSds();
 }
 
 void loop() {
   publishMeasurment();
   client.loop();
-  delay(1000);
+  delay(3000);
 }
