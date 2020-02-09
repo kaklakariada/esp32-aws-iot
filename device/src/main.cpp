@@ -8,9 +8,9 @@
 #include <Adafruit_BME280.h>
 #include <SDS011.h>
 
-#define PUBLISH_MEASURMENT_TOPIC   "sensor/measurment"
-#define PUBLISH_MESSAGE_TOPIC   "sensor/message"
 #define AWS_IOT_SUBSCRIBE_TOPIC "esp32/sub"
+#define PUBLISH_MEASURMENT_TOPIC "sensor/measurment"
+#define PUBLISH_MESSAGE_TOPIC "sensor/message"
 #define SEALEVELPRESSURE_HPA (1013.25)
 
 WiFiClientSecure net = WiFiClientSecure();
@@ -19,17 +19,19 @@ Adafruit_BME280 bme;
 SDS011 sds;
 HardwareSerial port(2);
 
-void messageHandler(String &topic, String &payload) {
+void messageHandler(String &topic, String &payload)
+{
   Serial.println("incoming: " + topic + " - " + payload);
 }
 
-
-void publishJson(const char* topic, StaticJsonDocument<200> doc) {
+void publishJson(const char *topic, StaticJsonDocument<200> doc)
+{
   char jsonBuffer[512];
   serializeJson(doc, jsonBuffer);
 
   bool success = client.publish(topic, jsonBuffer);
-  if(!success) {
+  if (!success)
+  {
     Serial.print("Publish failed: ");
     Serial.println(success);
   }
@@ -44,7 +46,8 @@ void publishMessage(String type, String message)
   publishJson(PUBLISH_MESSAGE_TOPIC, doc);
 }
 
-void configureWill() {
+void configureWill()
+{
   StaticJsonDocument<200> doc;
   doc["type"] = "will";
   doc["message"] = "Thing disconnected";
@@ -65,18 +68,17 @@ void connectAWS()
 
   configureWill();
 
-  // Create a message handler
-  client.onMessage(messageHandler);
-
   Serial.print("Connecting to AWS IOT as thing ");
   Serial.println(THINGNAME);
 
-  while (!client.connect(THINGNAME)) {
+  while (!client.connect(THINGNAME))
+  {
     Serial.print(".");
     delay(100);
   }
 
-  if(!client.connected()){
+  if (!client.connected())
+  {
     Serial.println("AWS IoT Timeout!");
     return;
   }
@@ -85,10 +87,16 @@ void connectAWS()
   Serial.print("Subscribing to topic ");
   Serial.println(AWS_IOT_SUBSCRIBE_TOPIC);
 
-  bool success = client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
-
-  Serial.print("Subscription success: ");
-  Serial.println(success);
+  if (client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC))
+  {
+    Serial.print("Successfully subscribed to topic");
+    Serial.println(AWS_IOT_SUBSCRIBE_TOPIC);
+    client.onMessage(messageHandler);
+  }
+  else
+  {
+    Serial.println("Subscription to topic failed");
+  }
 
   Serial.println("AWS IoT Connected!");
   publishMessage("info", "Connected to AWS IoT");
@@ -103,7 +111,8 @@ void connectWifi()
   Serial.print(WIFI_SSID);
   Serial.println("...");
 
-  while (WiFi.status() != WL_CONNECTED){
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
@@ -111,13 +120,16 @@ void connectWifi()
   Serial.println("Connected to Wi-Fi!");
 }
 
-void connectBme() {
+void connectBme()
+{
   bool status = bme.begin(0x76);
   Serial.println("Connecting to BME280...");
-  if (!status) {
+  if (!status)
+  {
     publishMessage("error", "Could not find a valid BME280 sensor, check wiring!");
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
-    while (1);
+    while (1)
+      ;
   }
   publishMessage("info", "Connected to BME280");
   Serial.println("Connected to BME280");
@@ -135,20 +147,25 @@ void publishMeasurment()
 
   float p10, p25;
   int err = sds.read(&p25, &p10);
-  if (!err) {
+  if (!err)
+  {
     doc["sds_p10"] = p10;
     doc["sds_p25"] = p25;
-  } else {
+  }
+  else
+  {
     doc["sds_err"] = err;
   }
   publishJson(PUBLISH_MEASURMENT_TOPIC, doc);
 }
 
-void connectSds() {
+void connectSds()
+{
   sds.begin(&port);
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   connectWifi();
   connectAWS();
@@ -156,7 +173,8 @@ void setup() {
   connectSds();
 }
 
-void loop() {
+void loop()
+{
   publishMeasurment();
   client.loop();
   delay(3000);
