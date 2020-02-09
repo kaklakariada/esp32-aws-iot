@@ -39,6 +39,11 @@ export class InfrastructureStack extends cdk.Stack {
             Effect: "Allow",
             Action: "iot:Subscribe",
             Resource: "*"
+          },
+          {
+            Effect: "Allow",
+            Action: "iot:Receive",
+            Resource: "*"
           }
         ]
       }
